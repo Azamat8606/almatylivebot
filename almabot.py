@@ -1,31 +1,37 @@
-from aiogram import Bot, types
-from aiogram.dispatcher import Dispatcher
-from aiogram.utils import executor
+import hashlib
+import logging
 
-import asyncio
-from aiohttp import ClientSession
+from aiogram import Bot, Dispatcher, executor
+from aiogram.types import InlineQuery, \
+    InputTextMessageContent, InlineQueryResultArticle
 
-TOKEN = "6014581206:AAFx-4rrWXxiK18fejpghqfBwx7_1Mvkybo"
+API_TOKEN = '6014581206:AAFx-4rrWXxiK18fejpghqfBwx7_1Mvkybo'
 
+logging.basicConfig(level=logging.DEBUG)
 
-bot = Bot(token=TOKEN)
+bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
 
-@dp.message_handler(commands=['start'])
-async def process_start_command(message: types.Message):
-    await message.reply("Привет!\nНапиши мне что-нибудь!")
-
-
-@dp.message_handler(commands=['help'])
-async def process_help_command(message: types.Message):
-    await message.reply("Напиши мне что-нибудь, и я отпрпавлю этот текст тебе в ответ!")
-
-
-@dp.message_handler()
-async def echo_message(msg: types.Message):
-    await bot.send_message(msg.from_user.id, msg.text)
+@dp.inline_handler()
+async def inline_echo(inline_query: InlineQuery):
+    # id affects both preview and content,
+    # so it has to be unique for each result
+    # (Unique identifier for this result, 1-64 Bytes)
+    # you can set your unique id's
+    # but for example i'll generate it based on text because I know, that
+    # only text will be passed in this example
+    text = inline_query.query or 'echo'
+    input_content = InputTextMessageContent(text)
+    result_id: str = hashlib.md5(text.encode()).hexdigest()
+    item = InlineQueryResultArticle(
+        id=result_id,
+        title=f'Result {text!r}',
+        input_message_content=input_content,
+    )
+    # don't forget to set cache_time=1 for testing (default is 300s or 5m)
+    await bot.answer_inline_query(inline_query.id, results=[item], cache_time=1)
 
 
 if __name__ == '__main__':
-    executor.start_polling(dp)
+    executor.start_polling(dp, skip_updates=True)
