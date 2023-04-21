@@ -5,7 +5,7 @@ from aiogram.utils import executor
 import asyncio
 from aiohttp import ClientSession
 
-TOKEN = ""
+TOKEN = "6014581206:AAFx-4rrWXxiK18fejpghqfBwx7_1Mvkybo"
 
 
 bot = Bot(token=TOKEN)
